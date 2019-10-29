@@ -1,4 +1,4 @@
-'Extract first sentence from each news article.'
+'Extract first sentences from each news article.'
 
 import pandas
 import argparse
