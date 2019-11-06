@@ -6,11 +6,12 @@ judged by MNLI-pretrained XLNet model.
 
 import random
 import pandas
-import spacy
 import argparse
 import torch
 import numpy as np
 
+from collections import Counter
+from nltk.tokenize import sent_tokenize
 from tqdm import tqdm
 from transformers import (
     XLNetForSequenceClassification,
@@ -28,9 +29,11 @@ parser.add_argument('--output', type=str, default='buzzfeed_sent2.csv')
 parser.add_argument('--model_type', type=str, default='xlnet')
 args = parser.parse_args()
 
-NLP = spacy.load('en_core_web_sm')
 MAX_LENGTH = 128
 BATCH_SIZE = 8
+
+ENTAIL_THRESHOLD = 0.5
+CONTRA_THRESHOLD = 0.95
 
 MODEL_DICT = {
     'xlnet': (XLNetForSequenceClassification, XLNetTokenizer),
@@ -64,10 +67,10 @@ class Input:
 
 def choose_sentence(row, model, tokenizer):
     # random choice from (entailment, neutral, contradiction)
-    doc = NLP(row['text'])
+    doc = row['text']
     sentences = list(
-        filter(lambda x: len(x) > 40, [x.string.strip() for x in doc.sents]))
-    pivot_sentence = sentences[0]
+        filter(lambda x: len(x) > 40, sent_tokenize(doc)))
+    pivot_sentence = sentences[0] if len(sentences) > 0 else None
     inputs = list()
     for sentence in sentences[1:]:
         input_dict = tokenizer.encode_plus(
@@ -106,12 +109,22 @@ def choose_sentence(row, model, tokenizer):
         if len(results) > 0 else [-1, -1, -1]
     maxres = np.max(np.asarray(results), axis=0) \
         if len(results) > 0 else [0, 0, 0]
-    maxscoreidx = np.argmax(maxres)
-    sentence = inputs[argmaxres[maxscoreidx]].sentence \
-        if argmaxres[maxscoreidx] >= 0 else 'False'
-    label = '%s(%s)' % (['contradiction', 'entailment',
-                         'neutral'][maxscoreidx], str(maxres))
-    return pivot_sentence, sentence, label
+
+    sentence = inputs[argmaxres[2]].sentence \
+        if argmaxres[2] >= 0 else 'False'
+    label = 'neutral(%s)'
+
+    if maxres[0] > CONTRA_THRESHOLD:
+        sentence = inputs[argmaxres[0]].sentence \
+            if argmaxres[0] >= 0 else 'False'
+        label = 'contradiction(%s)'
+
+    if maxres[1] > ENTAIL_THRESHOLD:
+        sentence = inputs[argmaxres[1]].sentence \
+            if argmaxres[1] >= 0 else 'False'
+        label = 'entailment(%s)'
+
+    return pivot_sentence, sentence, label % str(maxres)
 
 
 if __name__ == '__main__':
@@ -137,4 +150,7 @@ if __name__ == '__main__':
     data['sent1'] = pivot_sentences
     data['sent2'] = second_sentences
     data['machine_label'] = labels
+
     data.to_csv(args.output, na_rep='')
+    print('\n')
+    print(Counter([x.split('(')[0] for x in labels]))
