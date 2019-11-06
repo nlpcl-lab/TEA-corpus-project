@@ -1,0 +1,27 @@
+@import url(http://fonts.googleapis.com/earlyaccess/notosanskr.css);
+
+body {
+  margin: 0px;
+}
+
+.el-message-box.helpbox {
+  width: 80% !important;
+}
+
+.el-message-box.submitbox {
+  width: 60% !important;
+  min-width: 360px;
+}
+
+pre {
+  background-color: #2b2b2b;
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow: auto;
+  border-radius: 0.3em;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.el-message-box__content {
+  font-size: 16px;
+}
