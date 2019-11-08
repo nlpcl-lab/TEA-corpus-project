@@ -1,18 +1,20 @@
 <template>
   <el-row>
     <el-col :span="24" style="text-align: center;">
-      <h1>Acceptability &mdash; ID. {{ this.$route.params.id }}</h1>
+      <h1 class="news-headline">{{ title }}</h1>
     </el-col>
     <el-col
       :xs="{span: 24, offset: 0}"
       :sm="{span: 24, offset: 0}"
-      :md="{span: 16, offset: 4}"
-      :lg="{span: 12, offset: 6}"
-      :xl="{span: 10, offset: 7}"
+      :md="{span: 20, offset: 2}"
+      :lg="{span: 18, offset: 3}"
+      :xl="{span: 16, offset: 4}"
     >
       <el-card class="box-card" shadow="hover">
         <div>
-          <p>Hello! hello!</p>
+          <p class="news-content">
+            <span v-html="article"></span>
+          </p>
         </div>
       </el-card>
     </el-col>
@@ -27,11 +29,17 @@
       <el-card class="box-card" shadow="hover">
         <div slot="header" class="clearfix">
           <span>
-            <b>Annotation Form</b>
+            <b>Annotation Form &mdash; Acceptability ID. {{ this.$route.params.id }}</b>
           </span>
           <el-button style="float: right; margin: -8px;" type="text" @click="help">Help?</el-button>
         </div>
         <div>
+          <p>
+            Answer the form below after reading the highlighted sentence:
+            <br />
+            <span class="highlight-sentence news-content">{{ sentence }}</span>
+          </p>
+          <el-divider></el-divider>
           <el-form :label-position="'left'" ref="form" :model="form" label-width="120px">
             <el-form-item label="Label">
               <el-select v-model="form.label" placeholder="please select your label">
@@ -46,7 +54,7 @@
             <el-form-item label="Reason">
               <el-select v-model="form.reason" placeholder="please select your reason">
                 <el-option
-                  v-for="reason in reasons"
+                  v-for="reason in reasons[reasonsMap[form.label]]"
                   :label="reason.title"
                   :value="reason.value"
                   :key="reason.title"
@@ -128,25 +136,101 @@ export default {
             I have sound and cogent arguments for the rejection.\
             I am sure that I can effectively convince others that my judgement is reasonable.',
           value: 1
+        },
+        {
+          title: 'N/A',
+          desc: 'N/A',
+          value: 0
         }
       ],
       reasons: [
-        {
-          title: 'I have seen it before',
-          desc: '',
-          value: 2
-        },
-        {
-          title: "I don't have any interest",
-          desc: '',
-          value: 1
-        },
-        {
-          title: 'IDK :(',
-          desc: '',
-          value: 0
-        }
-      ]
+        [
+          {
+            title: 'It is a factual information',
+            value: 4
+          },
+          {
+            title:
+              'It is not a factual information, but I agree with the statement',
+            value: 3
+          },
+          {
+            title:
+              'It is a subjective statement, but I agree with the statement',
+            value: 2
+          },
+          {
+            title: 'It is a reasonable argument',
+            value: 1
+          },
+          {
+            title: 'N/A',
+            value: 0
+          }
+        ],
+        [
+          {
+            title: 'It is not a factual information',
+            value: 4
+          },
+          {
+            title:
+              "It's a subjective statement, therefore I'd neither accept nor reject it",
+            value: 3
+          },
+          {
+            title: "I don't have enough information to judge",
+            value: 2
+          },
+          {
+            title: 'This sentence gives no information to judge',
+            value: 1
+          },
+          {
+            title: 'N/A',
+            value: 0
+          }
+        ],
+        [
+          {
+            title: 'It is not a factual information',
+            value: 4
+          },
+          {
+            title:
+              "It's a subjective statement, and I do not agree with the statement",
+            value: 3
+          },
+          {
+            title:
+              'It is not a reasonable argument, and I do not agree with the statement',
+            value: 2
+          },
+          {
+            title: 'I do not like the way the author describes the information',
+            value: 1
+          },
+          {
+            title: 'N/A',
+            value: 0
+          }
+        ]
+      ],
+      reasonsMap: {
+        7: 0,
+        6: 0,
+        5: 0,
+        4: 1,
+        3: 2,
+        2: 2,
+        1: 2,
+        0: 1
+      },
+      title:
+        'Donald Trump Repeats Calls for Police Profiling After NYC Area Explosions',
+      article:
+        'One day after explosive devices were discovered in the Manhattan neighborhood of Chelsea and in Seaside Park and Elizabeth in New Jersey, Republican nominee Donald Trump repeated his calls to implement police profiling to stop more attacks in the United States. "Our local police, they know who a lot of these people are. They are afraid to do anything about it because they don\'t want to be accused of profiling and they don\'t want to be accused of all sorts of things," Trump said on "Fox and Friends" when asked what policies he would implement as president to "get tough" on terrorism. He argued that the country had no other choice but to follow the lead of Israel. "Israel has done an unbelievable job, and they will profile. They profile. They see somebody that\'s suspicious," he said, "they will profile. They will take that person in and check out. Do we have a choice? Look what\'s going on. Do we really have a choice? We\'re trying to be so politically correct in our country, and this is only going to get worse." Trump previously made similar comments. After the Orlando nightclub shooting in June, he said in an interview on "Face the Nation" that it was something the U.S. needed to seriously consider.',
+      sentence: '"Our local police, they know who a lot of these people are.'
     };
   },
   methods: {
@@ -155,13 +239,12 @@ export default {
       this.$msgbox({
         title: 'Help',
         message: h(
-          'div',
+          'el',
           null,
           this.options.map(x =>
-            h('span', null, [
+            h('li', null, [
               h('b', null, x.title + ' - '),
-              h('span', null, x.desc),
-              h('br', null, '')
+              h('span', null, x.desc)
             ])
           )
         ),
@@ -190,7 +273,7 @@ export default {
           h(
             'pre',
             { class: 'language-javascript', style: 'margin-top: 12px;' },
-            [h('code', null, JSON.stringify(this.form))]
+            [h('code', null, btoa(JSON.stringify(this.form)))]
           )
         ]);
       }
@@ -202,6 +285,12 @@ export default {
         customClass: 'submitbox'
       });
     }
+  },
+  mounted() {
+    this.article = this.article.replace(
+      this.sentence,
+      `<span class='highlight-sentence'>${this.sentence}</span>`
+    );
   }
 };
 </script>

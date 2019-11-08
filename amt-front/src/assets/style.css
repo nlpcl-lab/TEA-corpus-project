@@ -1,6 +1,10 @@
 @import url(http://fonts.googleapis.com/earlyaccess/notosanskr.css);
+@import url('https://fonts.googleapis.com/css?family=Crimson+Text&display=swap');
 
 body {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 300;
+  color: #4e4e4e;
   margin: 0px;
 }
 
@@ -24,4 +28,25 @@ pre {
 
 .el-message-box__content {
   font-size: 16px;
+}
+
+.highlight-sentence {
+  font-weight: 600;
+  color: #e91e63;
+  background-color: #eeeeee;
+}
+
+.highlight-hypothesis {
+  font-weight: 600;
+  color: #2196f3;
+  background-color: #eeeeee;
+}
+
+.news-headline {
+  font-family: 'Crimson Text', serif;
+  font-weight: 600;
+}
+
+.news-content {
+  font-family: 'Crimson Text', serif;
 }
