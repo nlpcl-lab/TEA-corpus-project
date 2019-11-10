@@ -72,6 +72,7 @@
 </template>
 
 <script>
+import { db } from '../firebase';
 export default {
   name: 'Acceptability',
   data() {
@@ -226,11 +227,9 @@ export default {
         1: 2,
         0: 1
       },
-      title:
-        'Donald Trump Repeats Calls for Police Profiling After NYC Area Explosions',
-      article:
-        'One day after explosive devices were discovered in the Manhattan neighborhood of Chelsea and in Seaside Park and Elizabeth in New Jersey, Republican nominee Donald Trump repeated his calls to implement police profiling to stop more attacks in the United States. "Our local police, they know who a lot of these people are. They are afraid to do anything about it because they don\'t want to be accused of profiling and they don\'t want to be accused of all sorts of things," Trump said on "Fox and Friends" when asked what policies he would implement as president to "get tough" on terrorism. He argued that the country had no other choice but to follow the lead of Israel. "Israel has done an unbelievable job, and they will profile. They profile. They see somebody that\'s suspicious," he said, "they will profile. They will take that person in and check out. Do we have a choice? Look what\'s going on. Do we really have a choice? We\'re trying to be so politically correct in our country, and this is only going to get worse." Trump previously made similar comments. After the Orlando nightclub shooting in June, he said in an interview on "Face the Nation" that it was something the U.S. needed to seriously consider.',
-      sentence: '"Our local police, they know who a lot of these people are.'
+      title: '',
+      article: '',
+      sentence: ''
     };
   },
   methods: {
@@ -284,13 +283,29 @@ export default {
         showCancelButton: false,
         customClass: 'submitbox'
       });
+    },
+    updateDataAndHighlight() {
+      db.ref(`acceptability/${this.$route.params.id}`).once(
+        'value',
+        snapshot => {
+          const document = snapshot.val();
+          this.title = document.title;
+          this.article = document.body;
+          this.sentence = document.sentence;
+
+          this.article = this.article.replace(
+            this.sentence,
+            `<span class='highlight-sentence'>${this.sentence}</span>`
+          );
+        }
+      );
     }
   },
   mounted() {
-    this.article = this.article.replace(
-      this.sentence,
-      `<span class='highlight-sentence'>${this.sentence}</span>`
-    );
+    this.updateDataAndHighlight();
+  },
+  updated() {
+    this.updateDataAndHighlight();
   }
 };
 </script>

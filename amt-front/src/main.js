@@ -9,11 +9,13 @@ import './assets/style.css';
 import axios from 'axios';
 import VueCodeHighlight from 'vue-code-highlight';
 import 'vue-code-highlight/themes/prism-tomorrow.css';
+import { rtdbPlugin } from 'vuefire';
 
 Vue.prototype.$http = axios;
 Vue.config.productionTip = false;
 Vue.use(ElementUI);
 Vue.use(VueCodeHighlight);
+Vue.use(rtdbPlugin);
 
 /* eslint-disable no-new */
 new Vue({
