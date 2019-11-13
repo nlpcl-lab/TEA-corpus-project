@@ -35,7 +35,10 @@
         </div>
         <div>
           <p>
+            Answer the question below.
+            <br />Question: Do you accept (or reject) the sentence as true? By true, we mean, the information that you believe in, things that you will tell your friends honestly, without further description.
             Answer the form below after reading the highlighted sentence:
+            <br />
             <br />
             <span class="highlight-sentence news-content">{{ sentence }}</span>
           </p>
@@ -302,9 +305,6 @@ export default {
     }
   },
   mounted() {
-    this.updateDataAndHighlight();
-  },
-  updated() {
     this.updateDataAndHighlight();
   }
 };

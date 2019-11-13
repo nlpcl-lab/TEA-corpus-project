@@ -35,12 +35,13 @@
         </div>
         <div>
           <p>
-            Answer the form below after reading the highlighted
-            <b>Text</b> and
-            <b>Hypothesis</b>:
-            <br />Text:
+            Answer the question below.
+            <br />
+            <b>Question</b>: Does Sentence 1 imply Sentence 2?
+            <br />
+            <br />Sentence 1:
             <span class="highlight-sentence news-content">{{ sentence }}</span>
-            <br />Hypothesis:
+            <br />Sentence 2:
             <span class="highlight-hypothesis news-content">{{ hypothesis }}</span>
           </p>
           <el-divider></el-divider>
@@ -77,17 +78,17 @@ export default {
       options: [
         {
           title: 'Contradiction',
-          desc: 'Text contradicts Hypothesis.',
+          desc: 'Sentence 1 contradicts Sentence 2.',
           value: 0
         },
         {
           title: 'Entailment',
-          desc: 'Text entails Hypothesis.',
+          desc: 'Sentence 1 entails Sentence 2.',
           value: 1
         },
         {
           title: 'Neutral',
-          desc: 'Text does not entail nor condradict Hypothesis.',
+          desc: 'Sentence 1 does not entail nor condradict Sentence 2.',
           value: 2
         }
       ],
@@ -170,9 +171,6 @@ export default {
     }
   },
   mounted() {
-    this.updateDataAndHighlight();
-  },
-  updated() {
     this.updateDataAndHighlight();
   }
 };

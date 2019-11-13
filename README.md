@@ -19,3 +19,24 @@ Uses `pandas`, `spaCy`, and `pytorch` as core libraries.
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 ```
+
+## Usage
+
+### Python part
+
+You need webis-buzzfeed corpus & pretrained transformers model for MNLI.
+
+1. `python to_csv --path=<path-to-corpus>`
+2. `python extract_sent2.py --pretrained=<pretrained-config-folder> --model_type=<xlnet-or-bert>`
+3. `python sort_csv.py --csv=<path-to-csv>`
+4. `python csv_to_json.py --csv=<path-to-csv> --out=<output-folder>`
+
+### Web part
+
+Uses Vue.js and Firebase.
+
+```bash
+cd amt-front
+npm install # or yarn
+npm run-script build
+```
