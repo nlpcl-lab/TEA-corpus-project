@@ -6,3 +6,4 @@ pretrained-bert/*
 *.csv
 *.pyc
 jsons/*
+*.jsonl
