@@ -1,13 +1,16 @@
 import os
 import json
+import random
 import pandas
 import argparse
 import jsonlines
 import statistics
+import matplotlib
+import numpy as np
 
-from tqdm import tqdm
-from statistics import mode
 from collections import Counter, defaultdict
+from statistics import mode
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--jsonl', type=str, default='./jsonls/TEA.jsonl')
@@ -38,10 +41,10 @@ def get_ent_label_distribution(jsons):
            for i in ent_counter])
 
 
-def MSE(reals, predictions):
+def AVGDIFF(reals, predictions):
     assert len(reals) == len(predictions)
 
-    return sum([(real - pred) ** 2 for real, pred in zip(reals, predictions)]) / len(reals)
+    return sum([abs(real - pred) for real, pred in zip(reals, predictions)]) / len(reals)
 
 
 def MAPE(reals, predictions):
@@ -71,17 +74,51 @@ def ent_acc_relation(jsons):
 
     print('\n===Entailment-Acceptability Relation===')
     for key in ENT_LABEL:
-        print('%s: %.3f, %.3f%%' % (key, MSE(ent_dict[key][0], ent_dict[key][1]),
-                                    MAPE(ent_dict[key][0], ent_dict[key][1])))
+        print('%s: %.3f(AVGDIFF)' %
+              (key, AVGDIFF(ent_dict[key][0], ent_dict[key][1])))
+
+
+CAT_STANDARD = {
+    7: 3,
+    6: 3,
+    5: 3,
+    4: 2,
+    3: 1,
+    2: 1,
+    1: 1
+}
+
+
+def get_acc_label(lst):
+    fltrd = filtered(lst)
+    avg = sum(fltrd) / len(fltrd)
+    return CAT_STANDARD[round(avg)]
+
+
+def cat_ent_acc_relation(jsons):
+    ent_dict = defaultdict(lambda: [list(), list()])
+    for json in jsons:
+        try:
+            label = ENT_LABEL[mode(json['ent'])]
+            ent_dict[label][0].append(get_acc_label(json['acc'][0]))
+            ent_dict[label][1].append(get_acc_label(json['acc'][1]))
+        except statistics.StatisticsError:
+            continue
+    print('\n===(Categorized)Entailment-Acceptability Relation===')
+    for key in ENT_LABEL:
+        print('%s: %.3f(AVGDIFF)' %
+              (key, AVGDIFF(ent_dict[key][0], ent_dict[key][1])))
 
 
 def machine_v_human(jsons, csv_map):
     # pred_dict[machine][human]
     preds = [[0 for _ in ENT_LABEL] for _ in ENT_LABEL]
+    categorized_sents = defaultdict(lambda: defaultdict(list))
     for json in jsons:
         try:
             label = mode(json['ent'])
             preds[label][csv_map[json['no']]] += 1
+            categorized_sents[label][csv_map[json['no']]].append(json)
         except statistics.StatisticsError:
             continue
 
@@ -91,6 +128,72 @@ def machine_v_human(jsons, csv_map):
 
     print('\n===Machine-v-Human Prediction===')
     print(df)
+    with open('res_mvh.txt', 'w') as f:
+        for i in range(3):
+            for j in range(3):
+                f.write('%s(h)-%s(m):\n' % (ENT_LABEL[i], ENT_LABEL[j]))
+                sample = random.choice(categorized_sents[i][j])
+                f.write('sent1: %s\n' % sample['sent1'])
+                f.write('sent2: %s\n\n' % sample['sent2'])
+
+
+def filter_by_label(x):
+    try:
+        label = ENT_LABEL[mode(x['ent'])]
+        return label
+    except statistics.StatisticsError:
+        return None
+
+
+LA_DICT = {
+    3: 'Accept',
+    2: 'Hard',
+    1: 'Reject'
+}
+
+
+def get_variant_matrix(jsons):
+    for label in ENT_LABEL:
+        labelled = list(filter(lambda x: filter_by_label(x) == label, jsons))
+        classified = [[0 for _ in ENT_LABEL] for _ in ENT_LABEL]
+        f = open('res_acc.txt', 'w')
+
+        for ones in labelled:
+            acc1 = get_acc_label(ones['acc'][0])
+            acc2 = get_acc_label(ones['acc'][1])
+            classified[acc1 - 1][acc2 - 1] += 1
+            if acc1 != acc2:
+                f.write('acc1: %s vs acc2: %s\n' %
+                        (LA_DICT[acc1], LA_DICT[acc2]))
+                f.write('sent1: %s\n' % ones['sent1'])
+                f.write('sent2: %s\n\n' % ones['sent2'])
+        print(classified)
+        for i in range(3):
+            s = sum(classified[i])
+            if s == 0:
+                continue
+            for j in range(3):
+                classified[i][j] /= s
+
+        df = pandas.DataFrame(columns=['sent1', 'sent2', 'count'])
+        for i in range(3):
+            for j in range(3):
+                df.loc[i * 3 + j] = [LA_DICT[i + 1],
+                                     LA_DICT[j + 1], classified[i][j]]
+        df = df.pivot('sent1', 'sent2', 'count').astype(float)
+        print(df)
+
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        plt.pcolor(df, vmin=0, vmax=1)
+        plt.title('%s heatmap' % label, fontsize=20)
+        plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
+        plt.yticks(np.arange(0.5, len(df.index), 1), df.index)
+        plt.xlabel('sent2', fontsize=14)
+        plt.ylabel('sent1', fontsize=14)
+        plt.colorbar()
+        plt.savefig('heatmap_%s.png' % label)
+        plt.clf()
 
 
 if __name__ == '__main__':
@@ -105,3 +208,5 @@ if __name__ == '__main__':
     get_ent_label_distribution(jsons)
     ent_acc_relation(jsons)
     machine_v_human(jsons, csv_map)
+    cat_ent_acc_relation(jsons)
+    get_variant_matrix(jsons)

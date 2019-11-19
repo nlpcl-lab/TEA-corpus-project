@@ -7,3 +7,5 @@ pretrained-bert/*
 *.pyc
 jsons/*
 *.jsonl
+res_*.txt
+*.png
