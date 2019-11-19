@@ -5,7 +5,7 @@ pretrained-bert/*
 .DS_Store
 *.csv
 *.pyc
-jsons/*
+jsons/*.json
 *.jsonl
 res_*.txt
 *.png
