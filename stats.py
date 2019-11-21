@@ -185,13 +185,9 @@ def get_variant_matrix(jsons):
 
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
-        plt.pcolor(df, vmin=0, vmax=1, cmap='RdBu')
+        import seaborn as sns
+        ax = sns.heatmap(df, annot=True, cmap='RdBu', vmin=0, vmax=1)
         plt.title('%s heatmap' % label, fontsize=20)
-        plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
-        plt.yticks(np.arange(0.5, len(df.index), 1), df.index)
-        plt.xlabel('sent2', fontsize=14)
-        plt.ylabel('sent1', fontsize=14)
-        plt.colorbar()
         plt.savefig('heatmap_%s.png' % label)
         plt.clf()
 
