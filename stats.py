@@ -153,20 +153,20 @@ LA_DICT = {
 
 
 def get_variant_matrix(jsons):
+    f = open('res_acc.txt', 'w')
     for label in ENT_LABEL:
         labelled = list(filter(lambda x: filter_by_label(x) == label, jsons))
         classified = [[0 for _ in ENT_LABEL] for _ in ENT_LABEL]
-        f = open('res_acc.txt', 'w')
+        example = list()
 
         for ones in labelled:
             acc1 = get_acc_label(ones['acc'][0])
             acc2 = get_acc_label(ones['acc'][1])
             classified[acc1 - 1][acc2 - 1] += 1
-            if acc1 != acc2:
-                f.write('acc1: %s vs acc2: %s\n' %
-                        (LA_DICT[acc1], LA_DICT[acc2]))
-                f.write('sent1: %s\n' % ones['sent1'])
-                f.write('sent2: %s\n\n' % ones['sent2'])
+            if acc1 != acc2 and label == 'entailment':
+                example.append(ones)
+            if acc1 == acc2 and label == 'contradiction':
+                example.append(ones)
         print(classified)
         for i in range(3):
             s = sum(classified[i])
@@ -190,6 +190,20 @@ def get_variant_matrix(jsons):
         plt.title('%s heatmap' % label, fontsize=20)
         plt.savefig('heatmap_%s.png' % label)
         plt.clf()
+
+        if len(example) < 1:
+            continue
+        choices = random.sample(example, 4)
+        for choice in choices:
+            acc1 = get_acc_label(choice['acc'][0])
+            acc2 = get_acc_label(choice['acc'][1])
+            f.write('%s\n' % label)
+            f.write('acc1: %s vs acc2: %s\n' %
+                    (LA_DICT[acc1], LA_DICT[acc2]))
+            f.write('sent1: %s\n' % choice['sent1'])
+            f.write('sent2: %s\n\n' % choice['sent2'])
+
+    f.close()
 
 
 if __name__ == '__main__':
